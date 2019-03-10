@@ -1,60 +1,35 @@
 [//]: # (Image References)
 
-# Navigation
+# Continuous Control
 
 ## Introduction
 
 ### Objective
 
-Train an agent with the [DQN algorithm](https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf) to navigate a virtual world and collect as many yellow bananas as possible while avoiding blue bananas.
-
-<p align="center"><a href="https://github.com/plopd/navigation/blob/master/results/trained_agent.gif">
- <img width="512" height="256" src="https://github.com/plopd/navigation/blob/master/results/trained_agent.gif"></a>
-</p>
+Train a double-jointed arm to move its hand to the goal location, and keep it there by using policy-based (and value-based) methods.
+![Trained Agent](./results/trained_agent.gif)
 
 ### Background
 
-**Reward**
-of +1 is provided for collecting a yellow banana, and a reward of -1 is provided for collecting a blue banana.  Thus, the goal of the agent is to collect as many yellow bananas as possible while avoiding blue bananas.  
+The project solves the [Reacher](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#reacher) environment.
 
-**State**
-has 37 dimensions and contains the agent's velocity, along with ray-based perception of objects around agent's forward direction.  Given this information, the agent has to learn how to best select actions.
+In this environment, a double-jointed arm can move to target locations. A reward of +0.1 is provided for each step that the agent's hand is in the goal location. Thus, the goal of your agent is to maintain its position at the target location for as many time steps as possible.
 
-Excerpt from cf. [iandanforth](https://github.com/Unity-Technologies/ml-agents/issues/1134#issuecomment-417497502)
-```
-The state space has 37 dimensions and contains the agent's velocity, 
-along with ray-based perception of objects around agent's forward direction.
+The observation space consists of 33 variables corresponding to position, rotation, velocity, and angular velocities of the arm. Each action is a vector with four numbers, corresponding to torque applicable to two joints. Every entry in the action vector should be a number between -1 and 1.
 
-Ray Perception (35)
 
-7 rays projecting from the agent at the following angles (and returned in this order):
-[20, 90, 160, 45, 135, 70, 110] # 90 is directly in front of the agent
+#### Distributed Training
 
-Ray (5)
+The project contains the environment version contains 20 identical agents, each with its own copy of the environment.
+The second version is useful for algorithms like PPO, A3C, and D4PG that use multiple (non-interacting, parallel) copies of the same agent to distribute the task of gathering experience.
 
-Each ray is projected into the scene. 
-If it encounters one of four detectable objects the value at that position in the array is set to 1. 
-Finally there is a distance measure which is a fraction of the ray length.
-[Banana, Wall, BadBanana, Agent, Distance]
+#### Solving the Environment
 
-example
-[0, 1, 1, 0, 0.2]
+The agents must get an average score of +30 (over 100 consecutive episodes, and over all agents). Specifically,
 
-There is a BadBanana detected 20% of the way along the ray and a wall behind it.
-
-Velocity of Agent (2)
-Left/right velocity (usually near 0)
-Forward/backward velocity (0-11.2)
-```
-
-**Actions**
-are four and discrete, corresponding to:
-- **`0`** - move forward.
-- **`1`** - move backward.
-- **`2`** - turn left.
-- **`3`** - turn right.
-
-The task is *discounted* and *episodic*, and in order to solve the environment, the agent must get an average score of +13 over 100 consecutive episodes.
+- After each episode, we add up the rewards that each agent received (without discounting), to get a score for each agent. This yields 20 (potentially different) scores. We then take the average of these 20 scores.
+- This yields an average score for each episode (where the average is over all 20 agents).
+As an example, consider the plot below, where we have plotted the average score (over all 20 agents) obtained with each episode.
 
 ## Getting Started
 
@@ -62,21 +37,21 @@ The task is *discounted* and *episodic*, and in order to solve the environment, 
 
 0. Clone the repository
 ```bash
-git clone https://github.com/plopd/navigation.git
-cd navigation
+https://github.com/plopd/continuous-control.git
+cd continuous-control
 ```
 
 1. Create and activate a new environment with Python 3.6.
 
 	- __Linux__ or __Mac__: 
 	```bash
-	conda create --name navigation python=3.6
-	source activate navigation
+	conda create --name continuous_control python=3.6
+	source activate continuous_control
 	```
 	- __Windows__: 
 	```bash
-	conda create --name navigation python=3.6 
-	activate drlnd
+	conda create --name continuous_control python=3.6 
+	activate continuous_control
 	```
 	
 2. Clone and install the openai-gym repository
@@ -87,43 +62,43 @@ cd gym
 pip install -e .
 ```
 
-3. Create an [IPython kernel](http://ipython.readthedocs.io/en/stable/install/kernel_install.html) for the `navigation` environment.  
+3. Create an [IPython kernel](http://ipython.readthedocs.io/en/stable/install/kernel_install.html) for the `continuous_control` environment.  
 ```bash
-python -m ipykernel install --user --name navigation --display-name "navigation"
+python -m ipykernel install --user --name navigation --display-name "continuous_control"
 ```
 
 4. Start (local) jupyter notebook server
 ```bash
-cd ../navigation
+cd ../continuous-control
 jupyter-notebook
 ```
 
 **2. Download the Unity Environment**
 
-1. Download the environment from one of the links below. You need only select the environment that matches your operating system:
-    - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Linux.zip)
-    - Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana.app.zip)
-    - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Windows_x86.zip)
-    - Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Windows_x86_64.zip)
+1. Download the environment from one of the links below.  You need only select the environment that matches your operating system:
+
+    - **_Version 1: One (1) Agent_**
+        - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Linux.zip)
+        - Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher.app.zip)
+        - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Windows_x86.zip)
+        - Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Windows_x86_64.zip)
+
+    - **_Version 2: Twenty (20) Agents_**
+        - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Linux.zip)
+        - Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher.app.zip)
+        - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86.zip)
+        - Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86_64.zip)
 
 2. Place the file in the root of this repo, and unzip (or decompress) the file.
 
-### Code
+### Instructions
 
 The code is structured as follows:
 
-`checkpoints` - holds checkpoints of models for the agent
+`results` - camera-ready graphs and figures highlighting the results of the training as well as checkpoints of the trained agent.
 
-`results` - camera-ready graphs and figures highlighting the results of the training
+`utils` - helper methods (e.g. saving checkpoints, plotting, ...)
 
-`src` - agent and models used
-
-`utils` - useful code reusable for different agents (e.g. replay buffer)
-
-`Navigation.ipynb` - tutorial notebook to help users go through the training and testing pipeline
+`Continuous_Control.ipynb` - notebook with environment setup and demo of a smart agent.
 
 `REPORT.md` - outlines details on the algorithms used to train the agent
-
-## Instructions
-
-Follow the instructions in `Navigation.ipynb` to get started with training and/or watching a smart agent.
