@@ -97,7 +97,6 @@ class Agent():
         actions_next = self.actor_target(next_states)
         Q_targets_next = self.critic_target(next_states, actions_next)
         # Compute Q targets for current states (y_i)
-        # print(Q_targets_next.shape, next_states.shape, actions_next.shape, len(rewards), len(dones))
         Q_targets = rewards + (gamma * Q_targets_next * (1 - dones))
         # Compute critic loss
         Q_expected = self.critic_local(states, actions)
@@ -105,6 +104,7 @@ class Agent():
         # Minimize the loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
+        torch.nn.utils.clip_grad_norm(self.critic_local.parameters(), 1) # clip gradients at 1
         self.critic_optimizer.step()
 
         # ---------------------------- update actor ---------------------------- #
