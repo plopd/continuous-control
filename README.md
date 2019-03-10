@@ -7,6 +7,7 @@
 ### Objective
 
 Train a double-jointed arm to move its hand to the goal location, and keep it there by using policy-based (and value-based) methods.
+
 ![Trained Agent](./results/trained_agent.gif)
 
 ### Background
@@ -93,7 +94,39 @@ jupyter-notebook
 
 ### Instructions
 
-The code is structured as follows:
+To train an agent run `python train.py`. The python file contains many useful command line arguments:
+
+```
+    parser.add_argument("-env_fp", "--environment_filepath", help="Filepath to environment to load.",
+                        default='env/Reacher.app')
+    parser.add_argument("-no_gr", "--no_graphics", help="Whether to display the environment.",
+                        action="store_true", default=True)
+    parser.add_argument("-n_episodes", "--number_episodes", help="Number of episodes to train.",
+                        default=2000, type=int)
+    parser.add_argument("-max_t", "--maximum_timesteps", help="Maximum number of timesteps within one episode.",
+                        default=1000, type=int)
+    parser.add_argument("-seed", "--seed", help="Random seed for reproducibility.",
+                        default=2, type=int)
+    parser.add_argument("-save_every_nth", "--save_every_nth", help="Save checkpoint every nth episode",
+                        default=25, type=int)
+    parser.add_argument("-bfsz", "--buffer_size", help="Buffer size of the replay memory.",
+                        default=int(1e5), type=int)
+    parser.add_argument("-bsz", "--batch_size", help="Batch size of experience to sample from replay buffer.",
+                        default=128, type=int)
+    parser.add_argument("-gamma", "--gamma", help="Discount factor for the cumulative rewards.",
+                        default=.99, type=float)
+    parser.add_argument("-tau", "--tau", help="Interpolation factor for soft update model parameters.",
+                        default=1e-3, type=float)
+    parser.add_argument("-lr_actor", "--learning_rate_actor", help="Learning rate for SGD on actor's parameters.",
+                        default=1e-4, type=float)
+    parser.add_argument("-lr_critic", "--learning_rate_critic", help="Learning rate for SGD on critic's parameters.",
+                        default=1e-3, type=float)
+    parser.add_argument("-weight_decay", "--weight_decay", help="Weight decay (L2 penalty) for Adam optimizer.",
+                        default=0, type=float)
+
+```
+
+##### Code
 
 `results` - camera-ready graphs and figures highlighting the results of the training as well as checkpoints of the trained agent.
 
@@ -102,3 +135,5 @@ The code is structured as follows:
 `Continuous_Control.ipynb` - notebook with environment setup and demo of a smart agent.
 
 `REPORT.md` - outlines details on the algorithms used to train the agent
+
+
