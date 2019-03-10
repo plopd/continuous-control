@@ -126,7 +126,7 @@ To train an agent run `python train.py`. The python file contains many useful co
 
 ```
 
-##### Code
+#### Code
 
 `results` - camera-ready graphs and figures highlighting the results of the training as well as checkpoints of the trained agent.
 
