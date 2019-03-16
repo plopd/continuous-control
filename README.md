@@ -10,6 +10,8 @@ Train a double-jointed arm to move its hand to the goal location, and keep it th
 
 ![Trained Agent](./results/trained_agent.gif)
 
+Fig.: Demo snippet video of a smart agent.
+
 ### Background
 
 The project solves the [Reacher](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#reacher) environment.

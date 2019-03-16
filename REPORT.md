@@ -3,6 +3,15 @@
 
 The agent is trained with [DDPG, Lillicrap, Timothy P., et al. "Continuous control with deep reinforcement learning." arXiv preprint arXiv:1509.02971 (2015)](https://arxiv.org/pdf/1509.02971.pdf).
 
+- DDPG is an Actor-Critic model-free algorithm
+- It is an modification of the deep Q-learning algorithm to continuous action spaces
+- The _actor_ function specifies the current policy by deterministically mapping states to actions. The actor's parameters are updated by gradient ascent on the policy
+- The _critic_ function is learning the state-action value function Q using the Bellman Equation
+- The actor is approximating the argmax operator on the Q-value in the Bellman Equation
+- DDPG is using a _replay buffer_ for sampling experience tuples, is decoupling the parameters being updated from the ones that are producing target values by using a target networks for both actor and critic
+- The parameters of the target network are updated _softly_, i.e. they are interpolated between the local parameters and the target parameters using an interpolation factor that is weighting the target network parameters more than the local ones 
+- The output of the actor is perturbed with noise using the _Ornstein–Uhlenbeck  process_ to encourage exploratory behavior in the agent
+
 **Neural Network Architectures**
 
 #### Actor
