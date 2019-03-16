@@ -7,9 +7,50 @@ The agent is trained with [DDPG, Lillicrap, Timothy P., et al. "Continuous contr
 
 #### Actor
 
+```markdown
+----------------------------------------------------------------
+        Layer (type)               Output Shape         Param #
+================================================================
+            Linear-1                  [-1, 256]           8,704
+       BatchNorm1d-2                  [-1, 256]             512
+            Linear-3                  [-1, 128]          32,896
+       BatchNorm1d-4                  [-1, 128]             256
+            Linear-5                    [-1, 4]             516
+================================================================
+Total params: 42,884
+Trainable params: 42,884
+Non-trainable params: 0
+----------------------------------------------------------------
+Input size (MB): 0.00
+Forward/backward pass size (MB): 0.01
+Params size (MB): 0.16
+Estimated Total Size (MB): 0.17
+----------------------------------------------------------------
+```
+
 - Linear(33, 256) - ReLU - BatchNorm - Linear(256, 128) -  ReLU - BatchNorm - Linear(128, 4) - Tanh
 
 #### Critic
+
+```markdown
+----------------------------------------------------------------
+        Layer (type)               Output Shape         Param #
+================================================================
+            Linear-1                  [-1, 256]           8,704
+       BatchNorm1d-2                  [-1, 256]             512
+            Linear-3                  [-1, 128]          33,408
+            Linear-4                    [-1, 1]             129
+================================================================
+Total params: 42,753
+Trainable params: 42,753
+Non-trainable params: 0
+----------------------------------------------------------------
+Input size (MB): 0.00
+Forward/backward pass size (MB): 0.00
+Params size (MB): 0.16
+Estimated Total Size (MB): 0.17
+----------------------------------------------------------------
+```
 
 - Linear(33, 256) - ReLU - BatchNorm - Linear(256+4, 128) -  ReLU - Linear(128, 1)
 
