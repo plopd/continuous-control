@@ -5,17 +5,31 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-from model import Actor, Critic
+from model import Actor
+from model import Critic
 from ounoise import OUNoise
 from replay_buffer import ReplayBuffer
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class Agent():
+
+class Agent:
     """Interacts with and learns from the environment."""
 
-    def __init__(self, num_agents, state_size, action_size, buffer_size=int(1e5), batch_size=128, gamma=.99, tau=1e-3, lr_actor=1e-4, lr_critic=1e-3,
-                 weight_decay=0, random_seed=2):
+    def __init__(
+        self,
+        num_agents,
+        state_size,
+        action_size,
+        buffer_size=int(1e5),
+        batch_size=128,
+        gamma=0.99,
+        tau=1e-3,
+        lr_actor=1e-4,
+        lr_critic=1e-3,
+        weight_decay=0,
+        random_seed=2,
+    ):
         """Initialize an Agent object.
 
         Params
@@ -41,14 +55,20 @@ class Agent():
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(state_size, action_size, random_seed).to(device)
         self.critic_target = Critic(state_size, action_size, random_seed).to(device)
-        self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=lr_critic, weight_decay=weight_decay)
+        self.critic_optimizer = optim.Adam(
+            self.critic_local.parameters(), lr=lr_critic, weight_decay=weight_decay
+        )
 
         # Noise process
         self.noise = OUNoise((num_agents, action_size), random_seed)
 
         # Replay memory
-        self.memory = ReplayBuffer(action_size=action_size, buffer_size=buffer_size, batch_size=batch_size,
-                                   seed=random_seed)
+        self.memory = ReplayBuffer(
+            action_size=action_size,
+            buffer_size=buffer_size,
+            batch_size=batch_size,
+            seed=random_seed,
+        )
 
     def step(self, state, action, reward, next_state, done):
         """Save experience in replay memory, and use random sample from buffer to learn."""
@@ -100,7 +120,9 @@ class Agent():
         # Minimize the loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1)  # clip gradients at 1
+        torch.nn.utils.clip_grad_norm_(
+            self.critic_local.parameters(), 1
+        )  # clip gradients at 1
         self.critic_optimizer.step()
 
         # ---------------------------- update actor ---------------------------- #
@@ -126,5 +148,9 @@ class Agent():
             target_model: PyTorch model (weights will be copied to)
             tau (float): interpolation parameter
         """
-        for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
-            target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
+        for target_param, local_param in zip(
+            target_model.parameters(), local_model.parameters()
+        ):
+            target_param.data.copy_(
+                tau * local_param.data + (1.0 - tau) * target_param.data
+            )

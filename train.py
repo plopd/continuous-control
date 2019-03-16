@@ -1,15 +1,33 @@
-from unityagents import UnityEnvironment
+import argparse
+import logging
+from collections import deque
+
 import numpy as np
 import torch
+from unityagents import UnityEnvironment
+
 from ddpg_agent import Agent
-from collections import deque
-from utils import plot_scores, save_checkpoint
-import argparse
+from utils import plot_scores
+from utils import save_checkpoint
 
 
-def train(n_episodes, max_t, env_fp, no_graphics, seed, save_every_nth, buffer_size, batch_size, gamma, tau, lr_actor,
-          lr_critic, weight_decay):
-    print("#### Initialize environment...\n")
+def train(
+    n_episodes,
+    max_t,
+    env_fp,
+    no_graphics,
+    seed,
+    save_every_nth,
+    buffer_size,
+    batch_size,
+    gamma,
+    tau,
+    lr_actor,
+    lr_critic,
+    weight_decay,
+    log,
+):
+    log.info("#### Initializing environment...")
     # init environment
     env = UnityEnvironment(file_name=env_fp, no_graphics=no_graphics)
 
@@ -21,17 +39,19 @@ def train(n_episodes, max_t, env_fp, no_graphics, seed, save_every_nth, buffer_s
 
     # number of agents
     num_agents = len(env_info.agents)
-    print('Number of agents:', num_agents)
+    log.info(f"Number of agents: {num_agents}")
 
     # size of each action
     action_size = brain.vector_action_space_size
-    print('Size of each action:', action_size)
+    log.info(f"Size of each action: {action_size}")
 
     # examine the state space
     states = env_info.vector_observations
     state_size = states.shape[1]
-    print('There are {} agents. Each observes a state with length: {}'.format(states.shape[0], state_size))
-    print('The state for the first agent looks like:\n', states[0])
+    log.info(
+        f"There are {states.shape[0]} agents. Each observes a state with length: {state_size}"
+    )
+    log.info(f"The state for the first agent looks like: {states[0]}")
 
     agent = Agent(
         num_agents=len(env_info.agents),
@@ -44,9 +64,10 @@ def train(n_episodes, max_t, env_fp, no_graphics, seed, save_every_nth, buffer_s
         lr_actor=lr_actor,
         lr_critic=lr_critic,
         weight_decay=weight_decay,
-        random_seed=seed)
+        random_seed=seed,
+    )
 
-    print("#### Training...\n")
+    log.info("#### Training...")
 
     scores_deque = deque(maxlen=100)
     scores = []
@@ -55,7 +76,7 @@ def train(n_episodes, max_t, env_fp, no_graphics, seed, save_every_nth, buffer_s
         env_info = env.reset(train_mode=True)[brain_name]
         states = env_info.vector_observations
         agent.reset()
-        score = np.zeros((env_info.agents, 1))
+        score = np.zeros((len(env_info.agents), 1))
         for t in range(max_t):
             actions = agent.act(states)
             env_info = env.step(actions)[brain_name]
@@ -71,65 +92,159 @@ def train(n_episodes, max_t, env_fp, no_graphics, seed, save_every_nth, buffer_s
                 break
         scores_deque.append(np.mean(score))
         scores.append(np.mean(score))
-        print('\rEpisode {}\tAverage Score: {:.2f}\tScore: {:.2f}'.format(i_episode, np.mean(scores_deque), scores[-1]),
-              end="")
+        print(
+            "Episode {}\tAverage Score: {:.2f}\tScore: {:.2f}".format(
+                i_episode, np.mean(scores_deque), scores[-1]
+            ),
+            end="\r",
+        )
+
         if i_episode % 100 == 0:
-            print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_deque)))
+            print(
+                "\rEpisode {}\tAverage Score: {:.2f}".format(
+                    i_episode, np.mean(scores_deque)
+                )
+            )
         if i_episode % save_every_nth == 0:
-            save_checkpoint(state={
-                'episode': i_episode,
-                'actor_state_dict': agent.actor_local.state_dict(),
-                'critic_state_dict': agent.critic_local.state_dict(),
-                'scores_deque': scores_deque,
-                'scores': scores
-            }, filename='checkpoint.pth')
-            plot_scores(scores=scores,
-                        title=f'Avg score over {len(env_info.agents)} agents',
-                        fname='avg_scores.png',
-                        savefig=True)
+            save_checkpoint(
+                state={
+                    "episode": i_episode,
+                    "actor_state_dict": agent.actor_local.state_dict(),
+                    "critic_state_dict": agent.critic_local.state_dict(),
+                    "scores_deque": scores_deque,
+                    "scores": scores,
+                },
+                filename="checkpoint.pth",
+            )
+            plot_scores(
+                scores=scores,
+                title=f"Avg score over {len(env_info.agents)} agents",
+                fname="avg_scores.png",
+                savefig=True,
+            )
 
         if np.mean(scores_deque) >= 30:
-            torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
-            torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
-            print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode - 100,
-                                                                                         np.mean(scores_deque)))
+            torch.save(agent.actor_local.state_dict(), "checkpoint_actor.pth")
+            torch.save(agent.critic_local.state_dict(), "checkpoint_critic.pth")
+            print(
+                "\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}".format(
+                    i_episode - 100, np.mean(scores_deque)
+                )
+            )
             break
 
 
 def main():
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.DEBUG)
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("-env_fp", "--environment_filepath", help="Filepath to environment to load.",
-                        default='env/Reacher.app')
-    parser.add_argument("-no_gr", "--no_graphics", help="Whether to display the environment.",
-                        action="store_true", default=True)
-    parser.add_argument("-n_episodes", "--number_episodes", help="Number of episodes to train.",
-                        default=2000, type=int)
-    parser.add_argument("-max_t", "--maximum_timesteps", help="Maximum number of timesteps within one episode.",
-                        default=1000, type=int)
-    parser.add_argument("-seed", "--seed", help="Random seed for reproducibility.",
-                        default=2, type=int)
-    parser.add_argument("-save_every_nth", "--save_every_nth", help="Save checkpoint every nth episode",
-                        default=25, type=int)
-    parser.add_argument("-bfsz", "--buffer_size", help="Buffer size of the replay memory.",
-                        default=int(1e5), type=int)
-    parser.add_argument("-bsz", "--batch_size", help="Batch size of experience to sample from replay buffer.",
-                        default=128, type=int)
-    parser.add_argument("-gamma", "--gamma", help="Discount factor for the cumulative rewards.",
-                        default=.99, type=float)
-    parser.add_argument("-tau", "--tau", help="Interpolation factor for soft update model parameters.",
-                        default=1e-3, type=float)
-    parser.add_argument("-lr_actor", "--learning_rate_actor", help="Learning rate for SGD on actor's parameters.",
-                        default=1e-4, type=float)
-    parser.add_argument("-lr_critic", "--learning_rate_critic", help="Learning rate for SGD on critic's parameters.",
-                        default=1e-3, type=float)
-    parser.add_argument("-weight_decay", "--weight_decay", help="Weight decay (L2 penalty) for Adam optimizer.",
-                        default=0, type=float)
+    parser.add_argument(
+        "-env_fp",
+        "--environment_filepath",
+        help="Filepath to environment to load.",
+        default="Reacher20.app",
+    )
+    parser.add_argument(
+        "-no_gr",
+        "--no_graphics",
+        help="Whether to display the environment.",
+        action="store_true",
+        default=True,
+    )
+    parser.add_argument(
+        "-n_episodes",
+        "--number_episodes",
+        help="Number of episodes to train.",
+        default=2000,
+        type=int,
+    )
+    parser.add_argument(
+        "-max_t",
+        "--maximum_timesteps",
+        help="Maximum number of timesteps within one episode.",
+        default=1000,
+        type=int,
+    )
+    parser.add_argument(
+        "-seed", "--seed", help="Random seed for reproducibility.", default=2, type=int
+    )
+    parser.add_argument(
+        "-save_every_nth",
+        "--save_every_nth",
+        help="Save checkpoint every nth episode",
+        default=25,
+        type=int,
+    )
+    parser.add_argument(
+        "-bfsz",
+        "--buffer_size",
+        help="Buffer size of the replay memory.",
+        default=int(1e5),
+        type=int,
+    )
+    parser.add_argument(
+        "-bsz",
+        "--batch_size",
+        help="Batch size of experience to sample from replay buffer.",
+        default=128,
+        type=int,
+    )
+    parser.add_argument(
+        "-gamma",
+        "--gamma",
+        help="Discount factor for the cumulative rewards.",
+        default=0.99,
+        type=float,
+    )
+    parser.add_argument(
+        "-tau",
+        "--tau",
+        help="Interpolation factor for soft update model parameters.",
+        default=1e-3,
+        type=float,
+    )
+    parser.add_argument(
+        "-lr_actor",
+        "--learning_rate_actor",
+        help="Learning rate for SGD on actor's parameters.",
+        default=1e-4,
+        type=float,
+    )
+    parser.add_argument(
+        "-lr_critic",
+        "--learning_rate_critic",
+        help="Learning rate for SGD on critic's parameters.",
+        default=1e-3,
+        type=float,
+    )
+    parser.add_argument(
+        "-weight_decay",
+        "--weight_decay",
+        help="Weight decay (L2 penalty) for Adam optimizer.",
+        default=0,
+        type=float,
+    )
 
     args = parser.parse_args()
 
-    train(args.number_episodes, args.maximum_timesteps, args.environment_filepath, args.no_graphics, args.seed, args.save_every_nth, args.buffer_size,
-          args.batch_size, args.gamma, args.tau, args.learning_rate_actor, args.learning_rate_critic, args.weight_decay)
+    train(
+        args.number_episodes,
+        args.maximum_timesteps,
+        args.environment_filepath,
+        args.no_graphics,
+        args.seed,
+        args.save_every_nth,
+        args.buffer_size,
+        args.batch_size,
+        args.gamma,
+        args.tau,
+        args.learning_rate_actor,
+        args.learning_rate_critic,
+        args.weight_decay,
+        log,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

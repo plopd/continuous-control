@@ -5,11 +5,11 @@ import torch
 
 def plot_scores(scores, title, fname, show=False, savefig=False):
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    fig.add_subplot(111)
     plt.plot(np.arange(1, len(scores) + 1), scores)
     plt.title(title)
-    plt.ylabel('Score')
-    plt.xlabel('Episode #')
+    plt.ylabel("Score")
+    plt.xlabel("Episode #")
     if savefig:
         plt.savefig(fname)
     if show:
