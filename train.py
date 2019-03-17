@@ -55,8 +55,8 @@ def train(
 
     agent = Agent(
         num_agents=len(env_info.agents),
-        state_size=brain.vector_observation_space_size,
-        action_size=brain.vector_action_space_size,
+        state_size=state_size,
+        action_size=action_size,
         buffer_size=buffer_size,
         batch_size=batch_size,
         gamma=gamma,
